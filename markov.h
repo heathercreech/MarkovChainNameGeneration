@@ -56,7 +56,7 @@ namespace markov {
 
 
 	//generates a vector of chains from a file (each line is a chain)
-	//line format: "stateA:probability:stateB"
+	//line format: "stateA:probability:stateB" (will probably change to a json format)
 	template<typename T>
 	std::vector<Chain<T>> getChainsFromFile(std::string file_path) {
 		std::vector<Chain<T>> chains;
