@@ -1,7 +1,11 @@
 #pragma once
 
+#include "boost_assist.h"
+
 #include <boost\lexical_cast.hpp>
 #include <boost\tokenizer.hpp>
+#include <boost\property_tree\ptree.hpp>
+#include <boost\property_tree\json_parser.hpp>
 
 #include <fstream>
 #include <vector>
@@ -42,46 +46,42 @@ namespace markov {
 	using ChainVector = std::vector<Chain<T>>;
 
 
-	//generates a vector of chains from a file (each line is a chain)
-	//line format: "stateA:probability:stateB" (will probably change to a json format)
+	/*	generates a vector of chains from a file (each line is a chain)
+		uses json, required variables:
+		"chains" - an array of the chains ("chains": [{}, ...]
+		
+		each element of a chain array must have the following values:
+		"src" - the state that is started with
+		"dest" - the state that is transitioned to
+		"probability" - the probability that state src will transfer to state dest
+	*/
 	template<typename T>
 	ChainVector<T> getChainsFromFile(std::string file_path) {
 		ChainVector<T> chains;
-		std::ifstream input_file(file_path);
-
-		if (input_file.bad()) {
-			printf("Error: unable to read file \"%s\", returning empty vector.\n", file_path.c_str());
+		std::ifstream json_file(file_path);
+		
+		if (json_file.bad()) {
+			printf("Error: unable to open file \"%s\"\n", file_path.c_str());
 			return chains;
 		}
+		
+		std::stringstream ss;
+		ss.str(std::string((std::istreambuf_iterator<char>(json_file)), std::istreambuf_iterator<char>()));
 
-		boost::char_separator<char> sep(":");
-		std::string line = "";
+		boost::property_tree::ptree pt;
+		boost::property_tree::read_json(ss, pt);
 
-		int line_count = 1; //for debuging
-		while (std::getline(input_file, line)) {
+		boost::property_tree::ptree chain_nodes = pt.get_child("chains"); //go into the array
+		std::vector<boost::property_tree::ptree> children = ba_ptree::getChildren(chain_nodes); //get vector the elements of the array
+
+		for (unsigned int i = 0; i < children.size(); i++) {
 			Chain<T> current_chain;
-			boost::tokenizer<boost::char_separator<char>> tok(line, sep);
-
-			int element_count = 0;
-			for (boost::tokenizer<boost::char_separator<char>>::iterator it = tok.begin(); it != tok.end(); it++) {
-				switch (element_count) {
-				case 0:
-					current_chain.src = boost::lexical_cast<T>(*it);
-					break;
-				case 1:
-					current_chain.probability = boost::lexical_cast<double>(*it);
-					break;
-				case 2:
-					current_chain.dest = boost::lexical_cast<T>(*it);
-					break;
-				default:
-					printf("Error: too many entries for a markov chain on line %i\n", line_count);
-				}
-				element_count++;
-			}
+			
+			current_chain.src = children[i].get<T>("src");
+			current_chain.dest = children[i].get<T>("dest");
+			current_chain.probability = children[i].get<double>("probability");
 
 			chains.push_back(current_chain);
-			line_count++;
 		}
 
 		return chains;
