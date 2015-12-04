@@ -6,42 +6,26 @@
 #include <fstream>
 #include <vector>
 
+
 //all the classes and functions required for a markov chain implementation
 namespace markov {
-	
-	//
-	template<typename T>
-	class LexicalVector : public std::vector<T> {
-	public:
-		//constructors (just pass throughs into the base vector constructors
-		LexicalVector() : std::vector<T>() {};
-		LexicalVector(std::initializer_list<T> init_list) : std::vector<T>(init_list) {};
-
-
-		//for use with boost's lexical_cast
-		friend std::istream& operator>>(std::istream& is, const LexicalVector<T>& lv) {
-			return is;
-		};
-	private:
-	};
-
-
 
 	//the actual representation of the chain
 	template<typename T>
 	struct Chain {
-		LexicalVector<T> src; //the beginning state. using a vector allows easy determination of the order of the chain
-		T dest = 0; //what the src leads to
+		T src; //the beginning state. using a vector allows easy determination of the order of the chain
+		T dest; //what the src leads to
 		double probability = 0; //probability that src leads to dest
 		
 		
 		//default constructor
-		Chain() : src(){
+		Chain() : src(), dest(){
 		};
 
 
 		//intialization constructor
-		Chain(LexicalVector<T> s, T d, double p) : src(s) {
+		Chain(T s, T d, double p){
+			src = s;
 			dest = d;
 			probability = p;
 		};
@@ -54,13 +38,15 @@ namespace markov {
 	};
 
 
+	template<typename T>
+	using ChainVector = std::vector<Chain<T>>;
+
 
 	//generates a vector of chains from a file (each line is a chain)
 	//line format: "stateA:probability:stateB" (will probably change to a json format)
 	template<typename T>
-	std::vector<Chain<T>> getChainsFromFile(std::string file_path) {
-		std::vector<Chain<T>> chains;
-
+	ChainVector<T> getChainsFromFile(std::string file_path) {
+		ChainVector<T> chains;
 		std::ifstream input_file(file_path);
 
 		if (input_file.bad()) {
@@ -80,7 +66,7 @@ namespace markov {
 			for (boost::tokenizer<boost::char_separator<char>>::iterator it = tok.begin(); it != tok.end(); it++) {
 				switch (element_count) {
 				case 0:
-					current_chain.src = boost::lexical_cast<LexicalVector<T>>(*it);
+					current_chain.src = boost::lexical_cast<T>(*it);
 					break;
 				case 1:
 					current_chain.probability = boost::lexical_cast<double>(*it);
@@ -91,7 +77,6 @@ namespace markov {
 				default:
 					printf("Error: too many entries for a markov chain on line %i\n", line_count);
 				}
-
 				element_count++;
 			}
 
