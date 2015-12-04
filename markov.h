@@ -13,12 +13,12 @@ namespace markov {
 	template<typename T>
 	class LexicalVector : public std::vector<T> {
 	public:
-		//
+		//constructors (just pass throughs into the base vector constructors
 		LexicalVector() : std::vector<T>() {};
 		LexicalVector(std::initializer_list<T> init_list) : std::vector<T>(init_list) {};
 
 
-		//
+		//for use with boost's lexical_cast
 		friend std::istream& operator>>(std::istream& is, const LexicalVector<T>& lv) {
 			return is;
 		};
@@ -55,7 +55,8 @@ namespace markov {
 
 
 
-	//
+	//generates a vector of chains from a file (each line is a chain)
+	//line format: "stateA:probability:stateB"
 	template<typename T>
 	std::vector<Chain<T>> getChainsFromFile(std::string file_path) {
 		std::vector<Chain<T>> chains;
