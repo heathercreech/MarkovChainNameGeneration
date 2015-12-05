@@ -1,3 +1,18 @@
+/*
+	markov.h is an attempt at a generic implementation of Markov chains for C++
+	Copyright (C) 2015  Seth Creech
+		This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+		This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+		You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 
 #include "boost_assist.h"
@@ -71,15 +86,14 @@ namespace markov {
 		boost::property_tree::ptree pt;
 		boost::property_tree::read_json(ss, pt);
 
-		boost::property_tree::ptree chain_nodes = pt.get_child("chains"); //go into the array
-		std::vector<boost::property_tree::ptree> children = ba_ptree::getChildren(chain_nodes); //get vector the elements of the array
+		std::vector<boost::property_tree::ptree> chain_array = ba_ptree::getChildren(ba_ptree::getChildren(ba_ptree::getChildren(pt)[0])[0]);
 
-		for (unsigned int i = 0; i < children.size(); i++) {
+		for (unsigned int i = 0; i < chain_array.size(); i++) {
 			Chain<T> current_chain;
 			
-			current_chain.src = children[i].get<T>("src");
-			current_chain.dest = children[i].get<T>("dest");
-			current_chain.probability = children[i].get<double>("probability");
+			current_chain.src = chain_array[i].get<T>("src");
+			current_chain.dest = chain_array[i].get<T>("dest");
+			current_chain.probability = chain_array[i].get<double>("probability");
 
 			chains.push_back(current_chain);
 		}
