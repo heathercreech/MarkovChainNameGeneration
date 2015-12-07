@@ -19,27 +19,39 @@
 
 #include <string>
 #include <vector>
-
+#include <random>
 
 
 //generates a name from a vector of Markov chains
 class NameGenerator {
 public:
-	NameGenerator() = delete;
-	NameGenerator(std::vector<markov::Chain<std::string>>); //initializes the chain vector
-	NameGenerator(std::vector<markov::Chain<std::string>>, std::string); //initializes the chain vector, and sets the starting characters
-
+	NameGenerator() = delete; //disable default constructor
+	NameGenerator(markov::ChainVector<std::string>); //initializes the chain vector
+	NameGenerator(markov::ChainVector<std::string>, unsigned int, unsigned int);
+	NameGenerator(markov::ChainVector<std::string>, std::string); //initializes the chain vector, and sets the starting characters
+	NameGenerator(markov::ChainVector<std::string>, unsigned int, unsigned int, std::string);
 	
 	std::string generate(); //returns a name generated with the current collection of Markov chains
-	void setStartingCharacters(std::string); //sets the starting characters
+	std::string generateRandom(); //runs calculateStartChars, then generates a name
+	bool setStartingChars(std::string); //sets the starting characters, returns true if chars were set
+	void calculateStartChars(); //randomly selects a set of starting characters if some are not provided
+
+	std::string operator[](std::string); //set the starting characters and then returns a name
+	
+	bool isGood() { return good; };
 
 private:
 
 	//helper methods
-	void calculateStartChars(); //randomly selects a set of starting characters if some are not provided
+	bool checkStartingChars(); //make sure that the starting characters can be used
 
 
+	bool good = true;
 	int order; //order of the Markov chains
+	
+	unsigned int min_iter;
+	unsigned int max_iter;
+	
 	std::string starting_characters;
-	std::vector<markov::Chain<std::string>> chains;
+	markov::ChainVector<std::string> chains;
 };
